@@ -1,0 +1,22 @@
+version: '3'
+services:
+  strings:
+    build:
+      dockerfile: StringsServiceRunDockerfile
+    hostname: strings_server
+    ports:
+      - 50051:50051
+  numbers:
+    build:
+      dockerfile: NumbersServiceRunDockerfile
+    hostname: numbers_server
+    ports:
+      - 50052:50052
+  api:
+    build:
+      dockerfile: ApiRunDockerfile
+    ports:
+      - 8080:8080
+    depends_on:
+      - strings
+      - numbers

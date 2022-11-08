@@ -1,0 +1,21 @@
+# syntax=docker/dockerfile:1
+
+FROM golang:1.18
+
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+WORKDIR /app
+
+COPY protos/ protos/
+COPY numbers_service/ numbers_service/
+
+WORKDIR /app/numbers_service
+RUN go mod download
+RUN go build -o /numbers_service
+
+WORKDIR /
+RUN rm -rf /app
+
+EXPOSE 50052
+
+CMD [ "/numbers_service" ]

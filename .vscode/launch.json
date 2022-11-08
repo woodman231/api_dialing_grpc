@@ -1,0 +1,90 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach to strings_service Debug Container",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "remotePath": "/app/strings_service",
+            "cwd": "${workspaceFolder}/strings_service",            
+            "host": "127.0.0.1",
+            "port": 40001,
+            "trace": "verbose",
+            "preLaunchTask": "Build and Debug the strings_service Container",
+            "postDebugTask": "Remove the strings_service Container"
+        },
+        {
+            "name": "Attach to numbers_service Debug Container",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "remotePath": "/app/numbers_service",
+            "cwd": "${workspaceFolder}/numbers_service",            
+            "host": "127.0.0.1",
+            "port": 40002,
+            "trace": "verbose",
+            "preLaunchTask": "Build and Debug the numbers_service Container",
+            "postDebugTask": "Remove the numbers_service Container"
+        },
+        {
+            "name": "Attach to api Debug Container",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "remotePath": "/app/api",
+            "cwd": "${workspaceFolder}/api",            
+            "host": "127.0.0.1",
+            "port": 40000,
+            "trace": "verbose",
+            "preLaunchTask": "Build and Debug the api Container",
+            "postDebugTask": "Remove the api Container"
+        },
+        {
+            "name": "Attach to composed strings_service Debug Container",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "remotePath": "/app/strings_service",
+            "cwd": "${workspaceFolder}/strings_service",            
+            "host": "127.0.0.1",
+            "port": 40001,
+            "trace": "verbose"
+        },
+        {
+            "name": "Attach to composed numbers_service Debug Container",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "remotePath": "/app/numbers_service",
+            "cwd": "${workspaceFolder}/numbers_service",            
+            "host": "127.0.0.1",
+            "port": 40002,
+            "trace": "verbose"            
+        },
+        {
+            "name": "Attach to composed api Debug Container",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "remotePath": "/app/api",
+            "cwd": "${workspaceFolder}/api",            
+            "host": "127.0.0.1",
+            "port": 40000,
+            "trace": "verbose",            
+            "postDebugTask": "Remove All 3 Debug Containers - Compose"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Build and attach to composed Debug Containers",
+            "configurations": [
+                "Attach to composed strings_service Debug Container",
+                "Attach to composed numbers_service Debug Container",
+                "Attach to composed api Debug Container"
+            ],
+            "preLaunchTask": "Build and Debug All 3 Containers - Compose",
+            "stopAll": true
+        }
+    ]
+}

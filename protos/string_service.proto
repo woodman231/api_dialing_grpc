@@ -1,0 +1,17 @@
+syntax = "proto3";
+package string_services;
+
+option go_package = "github.com/woodman231/api_dialing_grpc/protos/stringspb";
+
+message OperationRequest {
+    string input_string = 1;
+}
+
+message OperationResult {
+    string output_string = 1;
+}
+
+service StringService {
+    rpc MakeUpperCase(OperationRequest) returns (OperationResult);
+    rpc MakeLowerCase(OperationRequest) returns (OperationResult);
+}

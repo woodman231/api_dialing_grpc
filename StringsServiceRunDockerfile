@@ -1,0 +1,19 @@
+# syntax=docker/dockerfile:1
+
+FROM golang:1.18
+
+WORKDIR /app
+
+COPY protos/ protos/
+COPY strings_service/ strings_service/
+
+WORKDIR /app/strings_service
+RUN go mod download
+RUN go build -o /strings_service
+
+WORKDIR /
+RUN rm -rf /app
+
+EXPOSE 50051
+
+CMD [ "/strings_service" ]

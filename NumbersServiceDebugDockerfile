@@ -1,0 +1,17 @@
+# syntax=docker/dockerfile:1
+
+FROM golang:1.18
+
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+WORKDIR /app
+COPY protos/ protos/
+COPY numbers_service/ numbers_service/
+
+WORKDIR /app/numbers_service
+
+RUN go build -gcflags="all=-N -l"
+
+EXPOSE 50052 40002
+
+CMD ["/go/bin/dlv", "--listen=:40002", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "./numbers_service"]

@@ -1,0 +1,18 @@
+syntax = "proto3";
+package number_services;
+
+option go_package = "github.com/woodman231/api_dialing_grpc/protos/numberspb";
+
+message OperationRequest {
+    int32 input_number_one = 1;
+    int32 input_number_two = 2;
+}
+
+message OperationResult {
+    int32 output_number = 1;
+}
+
+service NumberService {
+    rpc AddTwoNumbers(OperationRequest) returns (OperationResult);
+    rpc SubtractTwoNumbers(OperationRequest) returns (OperationResult);
+}

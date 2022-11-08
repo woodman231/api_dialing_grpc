@@ -1,0 +1,98 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"log"
+	"net/http"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
+	stringspb "github.com/woodman231/api_dialing_grpc/protos/stringspb"
+)
+
+var (
+	strings_server_host = flag.String("strings_server_host", "localhost", "The host name for the strings_server service")
+	strings_server_port = flag.Int("strings_server_port", 50051, "The port for the strings_server service")
+)
+
+func main() {
+	flag.Parse()
+
+	stringsServerConnectionString := fmt.Sprintf("%v:%v", *strings_server_host, *strings_server_port)
+
+	log.Printf("stringsServerConnectionString: %v", stringsServerConnectionString)
+
+	// Connect to the Strings Service
+	stringsServiceConnection, err := grpc.Dial(stringsServerConnectionString, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	if err != nil {
+		log.Fatalf("did not connect to strings grpc server")
+	}
+
+	defer stringsServiceConnection.Close()
+
+	stringServiceClient := stringspb.NewStringServiceClient(stringsServiceConnection)
+
+	// Create Mux Server
+	muxServer := http.NewServeMux()
+
+	muxServer.HandleFunc("/api/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello World"))
+	})
+
+	muxServer.HandleFunc("/api/StringService/MakeUpperCase", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Received a request at /api/StringService/MakeUpperCase")
+		// Create a variable for the String Service OperationRequest
+		var stringOperationRequest stringspb.OperationRequest
+
+		// Decode the HTTP Request Body and Store the decoded object in the stringOperationRequest variable
+		err := json.NewDecoder(r.Body).Decode(&stringOperationRequest)
+
+		// If we are not able to decode the JSON that was provided in the request body then let the person know
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// If the input_string property was not set or was empty, then let the requester know and do not make the GRPC Request
+		if stringOperationRequest.InputString == "" {
+			http.Error(w, "Missing input_string, or input_string is empty", http.StatusBadRequest)
+			return
+		}
+
+		ctx := context.Background()
+
+		// Call the MakeUpperCase method of the stringServiceClient over GRPC
+		grpcResponse, err := stringServiceClient.MakeUpperCase(ctx, &stringOperationRequest)
+
+		// If we couldn't connect to the GRPC Service let the requester know
+		if err != nil {
+			log.Printf("Could not get response from GRPC")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Marshal the response to JSON to reply with in the Response Body
+		marshaledResponse, err := json.Marshal(grpcResponse)
+
+		// If we couldn't marshal the response, then let the requester know
+		if err != nil {
+			log.Printf("Could not marshal response from GRPC")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Set the content-type of the response to application/json
+		// Write the marshaledResponse to the HTTP Response body
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(marshaledResponse)
+	})
+
+	fmt.Println("Listening on port 8080")
+
+	http.ListenAndServe(":8080", muxServer)
+}

@@ -1,0 +1,8 @@
+go 1.18
+
+use (
+	./api
+	./numbers_service
+	./protos
+	./strings_service
+)

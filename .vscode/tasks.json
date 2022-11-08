@@ -1,0 +1,434 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile Strings Service Protobuff",
+            "type": "shell",
+            "command": [
+                "protoc",
+                "--go_out=./stringspb/",
+                "--go_opt=paths=source_relative",
+                "--go-grpc_out=./stringspb/",
+                "--go-grpc_opt=paths=source_relative",
+                "string_service.proto"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/protos"
+            }
+        },
+        {
+            "label": "Compile Numbers Service Protobuff",
+            "type": "shell",
+            "command": [
+                "protoc",
+                "--go_out=./numberspb/",
+                "--go_opt=paths=source_relative",
+                "--go-grpc_out=./numberspb/",
+                "--go-grpc_opt=paths=source_relative",
+                "./number_service.proto"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/protos"
+            }
+        },
+        {
+            "label": "Build the api_dialing_grpc docker network",
+            "type": "shell",
+            "command": [
+                "docker",
+                "network",
+                "create",
+                "api_dialing_grpc"
+            ]            
+        },
+        {
+            "label": "Build the strings_service Run Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "build",
+                "-t strings_service",
+                "-f StringsServiceRunDockerfile",
+                "."
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build the numbers_service Run Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "build",
+                "-t numbers_service",
+                "-f NumbersServiceRunDockerfile",
+                "."
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build the api Run Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "build",
+                "-t api",
+                "-f ApiRunDockerfile",
+                "."
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }            
+        },
+        {
+            "label": "Run the strings_service Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "run",
+                "-it",
+                "-d",
+                "-p 50051:50051",
+                "--name=strings_service",
+                "--network=api_dialing_grpc",
+                "--hostname=strings_server",
+                "strings_service"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }            
+        },
+        {
+            "label": "Run the numbers_service Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "run",
+                "-it",
+                "-d",
+                "-p 50052:50052",
+                "--name=numbers_service",
+                "--network=api_dialing_grpc",
+                "--hostname=numbers_server",
+                "numbers_service"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Run the api Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "run",
+                "-it",
+                "-d",
+                "-p 8080:8080",
+                "--name=api",
+                "--network=api_dialing_grpc",
+                "--hostname=api",
+                "api"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build All 3 Run Containers",
+            "dependsOn": [
+                "Build the strings_service Run Container",
+                "Build the numbers_service Run Container",
+                "Build the api Run Container"
+            ],
+            "dependsOrder": "parallel"
+        },
+        {
+            "label": "Run All 3 Containers",
+            "dependsOn": [
+                "Run the strings_service Container",
+                "Run the numbers_service Container",
+                "Run the api Container"
+            ],
+            "dependsOrder": "parallel"
+        },
+        {
+            "label": "Build and Run All 3 Containers",
+            "dependsOn": [
+                "Build All 3 Run Containers",
+                "Run All 3 Containers"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "Remove the strings_service Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "rm",
+                "-f",
+                "strings_service"
+            ]
+        },
+        {
+            "label": "Remove the numbers_service Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "rm",
+                "-f",
+                "numbers_service"
+            ]
+        },
+        {
+            "label": "Remove the api Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "rm",
+                "-f",
+                "api"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Remove All 3 Containers",
+            "dependsOn":[
+                "Remove the strings_service Container",
+                "Remove the numbers_service Container",
+                "Remove the api Container"
+            ],
+            "dependsOrder": "parallel"
+        },
+        {
+            "label": "Build All 3 Containers - Compose",
+            "type": "shell",
+            "command": [
+                "docker",
+                "compose",
+                "-f docker-run-compose.yml",
+                "build"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Run All 3 Containers - Compose",
+            "type": "shell",
+            "command":[
+                "docker",
+                "compose",
+                "-f docker-run-compose.yml",
+                "up",
+                "-d"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build and Run All 3 Containers - Compose",
+            "dependsOn": [
+                "Build All 3 Containers - Compose",
+                "Run All 3 Containers - Compose",                
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "Remove All 3 Containers - Compose",
+            "type": "shell",
+            "command": [
+                "docker",
+                "compose",
+                "-f docker-run-compose.yml",
+                "down"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build the strings_service Debug Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "build",
+                "-t strings_service",
+                "-f StringsServiceDebugDockerfile",
+                "."
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Debug the strings_service Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "run",
+                "-it",
+                "-d",
+                "-p 50051:50051",
+                "-p 40001:40001",
+                "--name=strings_service",
+                "--network=api_dialing_grpc",
+                "--hostname=strings_server",
+                "--cap-add=SYS_PTRACE",
+                "--security-opt=\"seccomp=unconfined\"",
+                "strings_service"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }            
+        },
+        {
+            "label": "Build and Debug the strings_service Container",
+            "dependsOn": [
+                "Build the strings_service Debug Container",
+                "Debug the strings_service Container"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "Build the numbers_service Debug Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "build",
+                "-t numbers_service",
+                "-f NumbersServiceDebugDockerfile",
+                "."
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Debug the numbers_service Container",
+            "type": "shell",
+            "command": [                
+                "docker",
+                "run",
+                "-it",
+                "-d",
+                "-p 50052:50052",
+                "-p 40002:40002",
+                "--name=numbers_service",
+                "--network=api_dialing_grpc",
+                "--hostname=numbers_server",
+                "--cap-add=SYS_PTRACE",
+                "--security-opt=\"seccomp=unconfined\"",
+                "numbers_service"                
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build and Debug the numbers_service Container",
+            "dependsOn": [
+                "Build the numbers_service Debug Container",
+                "Debug the numbers_service Container"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "Build the api Debug Container",
+            "type": "shell",
+            "command": [
+                "docker",
+                "build",
+                "-t api",
+                "-f ApiDebugDockerfile",
+                "."
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Debug the api Container",
+            "type": "shell",
+            "command":[
+                "docker",
+                "run",
+                "-it",
+                "-d",
+                "-p 8080:8080",
+                "-p 40000:40000",
+                "--name=api",
+                "--network=api_dialing_grpc",
+                "--hostname=api",
+                "--cap-add=SYS_PTRACE",
+                "--security-opt=\"seccomp=unconfined\"",
+                "api"                                
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build and Debug the api Container",
+            "dependsOn": [
+                "Build the api Debug Container",
+                "Debug the api Container"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "Build All 3 Debug Containers - Compose",
+            "type": "shell",
+            "command": [
+                "docker",
+                "compose",
+                "-f docker-debug-compose.yml",
+                "build"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Debug All 3 Containers - Compose",
+            "type": "shell",
+            "command":[
+                "docker",
+                "compose",
+                "-f docker-debug-compose.yml",
+                "up",
+                "-d"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build and Debug All 3 Containers - Compose",
+            "dependsOn":[
+                "Build All 3 Debug Containers - Compose",
+                "Debug All 3 Containers - Compose"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "Remove All 3 Debug Containers - Compose",
+            "type": "shell",
+            "command": [
+                "docker",
+                "compose",
+                "-f docker-debug-compose.yml",
+                "down"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        }
+    ]
+}
